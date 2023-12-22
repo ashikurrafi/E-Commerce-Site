@@ -3,9 +3,19 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const createError = require("http-errors");
 const { errorResponse } = require("./controllers/responseController");
+const xssClean = require("xss-clean");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
 
+const rateLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 min
+    max: 10,
+    message: "Too many request, Please try again later",
+});
+
+app.use(xssClean());
+app.use(rateLimiter);
 app.use(morgan("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,8 +29,6 @@ app.get("/", (req, res) => {
 app.get("/test", (req, res) => {
     res.send("Test API is working [GET]");
 });
-
-port = 3000;
 
 // Client error handling
 app.use((req, res, next) => {
