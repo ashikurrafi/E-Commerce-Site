@@ -6,6 +6,7 @@ const { errorResponse } = require("./controllers/responseController");
 const xssClean = require("xss-clean");
 const rateLimit = require("express-rate-limit");
 const userRouter = require("./routers/userRouter");
+const seedRouter = require("./routers/seedRouter");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/users", userRouter);
+app.use("/api/seed", seedRouter);
 
 app.get("/test", (req, res) => {
     res.send("Test API is working [GET]");
