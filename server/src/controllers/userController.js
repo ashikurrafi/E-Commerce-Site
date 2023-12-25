@@ -3,6 +3,7 @@ const User = require("../models/userModel");
 const { successResponse } = require("./responseController");
 const { mongoose } = require("mongoose");
 const { findWithId } = require("../services/findItem");
+const { deleteImage } = require("../helper/deleteImage");
 
 const getUsers = async (req, res, next) => {
     try {
@@ -70,7 +71,36 @@ const getUserByID = async (req, res, next) => {
     }
 };
 
+const deleteUserByID = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const options = { password: 0 };
+        const user = await findWithId(User, id, options);
+
+        const userImagePath = user.image;
+
+        deleteImage(userImagePath);
+
+        await User.findByIdAndDelete({
+            _id: id,
+            isAdmin: false,
+        });
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User delete successfully",
+        });
+    } catch (error) {
+        if (error instanceof mongoose.Error) {
+            next(createError(400, "Invalid user ID"));
+            return;
+        }
+        next(error);
+    }
+};
+
 module.exports = {
     getUsers,
     getUserByID,
+    deleteUserByID,
 };
