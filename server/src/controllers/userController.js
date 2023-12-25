@@ -4,6 +4,8 @@ const { successResponse } = require("./responseController");
 const { mongoose } = require("mongoose");
 const { findWithId } = require("../services/findItem");
 const { deleteImage } = require("../helper/deleteImage");
+const { jwtActivationKey } = require("../secret");
+const { createJSONWebToken } = require("../helper/jsonWebToken");
 
 const getUsers = async (req, res, next) => {
     try {
@@ -99,8 +101,69 @@ const deleteUserByID = async (req, res, next) => {
     }
 };
 
+const processRegister = async (req, res, next) => {
+    try {
+        const { name, email, password, phone, address } = req.body;
+
+        const userExist = await User.exists({ email: email });
+        if (userExist) {
+            throw createError(
+                409,
+                "User with this email already exist, please login"
+            );
+        }
+
+        const token = createJSONWebToken(
+            {
+                name,
+                email,
+                password,
+                phone,
+                address,
+            },
+            jwtActivationKey,
+            "10m"
+        );
+
+        // // Create email
+        // const emailData = {
+        //     email,
+        //     subject: "Account activation mail",
+        //     html: `<h2>Hello ${name},<br><p>Please click <a href="${clientURL}/api/users/activate/${token}" target="_blank">here</a> to active your account.</p></h2>`,
+        // };
+
+        // // Send email
+        // try {
+        //     await emailWithNodeMailer(emailData);
+        // } catch (emailError) {
+        //     next(createError(500, "Failed to send verification email"));
+        // }
+
+        // const newUser = {
+        //     name,
+        //     email,
+        //     password,
+        //     phone,
+        // };
+        return successResponse(res, {
+            statusCode: 200,
+            message: `Check ${email} for activating account`,
+            payload: {
+                token,
+            },
+        });
+    } catch (error) {
+        if (error instanceof mongoose.Error) {
+            next(createError(400, "Invalid user ID"));
+            return;
+        }
+        next(error);
+    }
+};
+
 module.exports = {
     getUsers,
     getUserByID,
     deleteUserByID,
+    processRegister,
 };
