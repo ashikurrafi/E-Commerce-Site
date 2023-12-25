@@ -4,8 +4,9 @@ const { successResponse } = require("./responseController");
 const { mongoose } = require("mongoose");
 const { findWithId } = require("../services/findItem");
 const { deleteImage } = require("../helper/deleteImage");
-const { jwtActivationKey } = require("../secret");
+const { jwtActivationKey, clientURL } = require("../secret");
 const { createJSONWebToken } = require("../helper/jsonWebToken");
+const emailWithNodeMailer = require("../helper/email");
 
 const getUsers = async (req, res, next) => {
     try {
@@ -125,19 +126,19 @@ const processRegister = async (req, res, next) => {
             "10m"
         );
 
-        // // Create email
-        // const emailData = {
-        //     email,
-        //     subject: "Account activation mail",
-        //     html: `<h2>Hello ${name},<br><p>Please click <a href="${clientURL}/api/users/activate/${token}" target="_blank">here</a> to active your account.</p></h2>`,
-        // };
+        // Create email
+        const emailData = {
+            email,
+            subject: "Account Activation Email",
+            html: `<h2>Hello ${name},<br><p>Please click <a href="${clientURL}/api/users/activate/${token}" target="_blank">here</a> to active your account.</p></h2>`,
+        };
 
-        // // Send email
-        // try {
-        //     await emailWithNodeMailer(emailData);
-        // } catch (emailError) {
-        //     next(createError(500, "Failed to send verification email"));
-        // }
+        // Send email
+        try {
+            await emailWithNodeMailer(emailData);
+        } catch (emailError) {
+            next(createError(500, "Failed to send verification email"));
+        }
 
         // const newUser = {
         //     name,
