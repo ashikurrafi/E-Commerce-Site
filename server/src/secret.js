@@ -8,6 +8,9 @@ const smtpUsername = process.env.SMTP_USERNAME;
 const smtpPassword = process.env.SMTP_PASSWORD;
 const clientURL = process.env.CLIENT_URL;
 const uploadDir = process.env.UPLOAD_DIRECTORY;
+const maximumFileSize = process.env.MAX_FILE_SIZE;
+const allowedFileType = process.env.ALLOWED_FILE_TYPE;
+
 module.exports = {
     serverPort,
     mongodbURL,
@@ -17,4 +20,6 @@ module.exports = {
     smtpPassword,
     clientURL,
     uploadDir,
+    maximumFileSize,
+    allowedFileType,
 };
