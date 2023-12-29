@@ -1,27 +1,29 @@
 const express = require("express");
 const {
-    getUsers,
-    getUserByID,
-    deleteUserByID,
-    processRegister,
-    activateUserAccount,
+    handelGetUsers,
+    handelGetUserByID,
+    handelDeleteUserByID,
+    handelProcessRegister,
+    handelActivateUserAccount,
+    handelUpdateUserById,
 } = require("../controllers/userController");
-const upload = require("../middlewares/uploadFiles");
 const { validateUserRegistration } = require("../validators/auth");
 const runValidation = require("../validators");
+const uploadUserImage = require("../middlewares/uploadFiles");
 
 const userRouter = express.Router();
 
-userRouter.get("/", getUsers);
-userRouter.get("/:id", getUserByID);
-userRouter.delete("/:id", deleteUserByID);
 userRouter.post(
     "/process-register",
-    upload.single("image"),
+    uploadUserImage.single("image"),
     validateUserRegistration,
     runValidation,
-    processRegister
+    handelProcessRegister
 );
-userRouter.post("/activate", activateUserAccount);
+userRouter.post("/activate", handelActivateUserAccount);
+userRouter.get("/", handelGetUsers);
+userRouter.get("/:id", handelGetUserByID);
+userRouter.delete("/:id", handelDeleteUserByID);
+userRouter.put("/:id", uploadUserImage.single("image"), handelUpdateUserById);
 
 module.exports = userRouter;

@@ -8,8 +8,9 @@ const { jwtActivationKey, clientURL } = require("../secret");
 const { createJSONWebToken } = require("../helper/jsonWebToken");
 const emailWithNodeMailer = require("../helper/email");
 const jwt = require("jsonwebtoken");
+const path = require("path");
 
-const getUsers = async (req, res, next) => {
+const handelGetUsers = async (req, res, next) => {
     try {
         const search = req.query.search || "";
         const page = Number(req.query.page) || 1;
@@ -55,7 +56,7 @@ const getUsers = async (req, res, next) => {
     }
 };
 
-const getUserByID = async (req, res, next) => {
+const handelGetUserByID = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
@@ -75,7 +76,7 @@ const getUserByID = async (req, res, next) => {
     }
 };
 
-const deleteUserByID = async (req, res, next) => {
+const handelDeleteUserByID = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
@@ -103,11 +104,18 @@ const deleteUserByID = async (req, res, next) => {
     }
 };
 
-const processRegister = async (req, res, next) => {
+const handelProcessRegister = async (req, res, next) => {
     try {
         const { name, email, password, phone, address } = req.body;
 
+        const image = req.file.path;
+
+        if (image && image.size > 1024 * 10242) {
+            throw createError(400, "File size too big, maximum size is 2 MB");
+        }
+
         const userExist = await User.exists({ email: email });
+
         if (userExist) {
             throw createError(
                 409,
@@ -115,14 +123,19 @@ const processRegister = async (req, res, next) => {
             );
         }
 
+        const tokenPayloadData = {
+            name,
+            email,
+            password,
+            phone,
+            address,
+            image: image,
+        };
+        if (image) {
+            tokenPayloadData.image = image;
+        }
         const token = createJSONWebToken(
-            {
-                name,
-                email,
-                password,
-                phone,
-                address,
-            },
+            tokenPayloadData,
             jwtActivationKey,
             "10m"
         );
@@ -141,13 +154,6 @@ const processRegister = async (req, res, next) => {
             next(createError(500, "Failed to send verification email"));
         }
 
-        const newUser = {
-            name,
-            email,
-            password,
-            phone,
-            address,
-        };
         return successResponse(res, {
             statusCode: 200,
             message: `Check ${email} for activating account`,
@@ -164,7 +170,7 @@ const processRegister = async (req, res, next) => {
     }
 };
 
-const activateUserAccount = async (req, res, next) => {
+const handelActivateUserAccount = async (req, res, next) => {
     try {
         const token = req.body.token;
         if (!token) {
@@ -198,10 +204,65 @@ const activateUserAccount = async (req, res, next) => {
     }
 };
 
+const handelUpdateUserById = async (req, res, next) => {
+    try {
+        const userId = req.params.id;
+        const options = { password: 0 };
+        const user = await findWithId(User, userId, options);
+        const updateOptions = {
+            new: true,
+            runValidators: true,
+            context: "query",
+        };
+
+        let updates = {};
+
+        const allowedFields = ["name", "password", "phone", "address"];
+
+        for (const key in req.body) {
+            if (allowedFields.includes(key)) {
+                updates[key] = req.body[key];
+            } else if (key === "email") {
+                throw createError(400, "Email can't be updated");
+            }
+        }
+
+        const image = req.file.path;
+        if (image) {
+            if (image.size > 1024 * 1024 * 2) {
+                throw createError(400, "Image is more than 2 MB");
+            }
+            updates.image = image;
+            user.image !== "default.png" && deleteImage(user.image);
+        }
+
+        // delete updates.email;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updates,
+            updateOptions
+        ).select("-password");
+
+        if (!updatedUser) {
+            throw createError(404, "User with this ID not exist");
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User updated successfully",
+            payload: updatedUser,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
-    getUsers,
-    getUserByID,
-    deleteUserByID,
-    processRegister,
-    activateUserAccount,
+    handelGetUsers,
+    handelGetUserByID,
+    handelDeleteUserByID,
+    handelProcessRegister,
+    handelActivateUserAccount,
+    handelUpdateUserById,
 };
