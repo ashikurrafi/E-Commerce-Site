@@ -108,7 +108,7 @@ const handelProcessRegister = async (req, res, next) => {
     try {
         const { name, email, password, phone, address } = req.body;
 
-        const image = req.file.path;
+        const image = req.file?.path;
 
         if (image && image.size > 1024 * 10242) {
             throw createError(400, "File size too big, maximum size is 2 MB");
@@ -227,7 +227,7 @@ const handelUpdateUserById = async (req, res, next) => {
             }
         }
 
-        const image = req.file.path;
+        const image = req.file?.path;
         if (image) {
             if (image.size > 1024 * 1024 * 2) {
                 throw createError(400, "Image is more than 2 MB");
@@ -258,6 +258,64 @@ const handelUpdateUserById = async (req, res, next) => {
     }
 };
 
+const handelBanUserById = async (req, res, next) => {
+    try {
+        const userId = req.params.id;
+        await findWithId(User, userId);
+        const updates = { isBanned: true };
+        const updateOptions = {
+            new: true,
+            runValidators: true,
+            context: "query",
+        };
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updates, // {isBanned:true}
+            updateOptions
+        ).select("-password");
+
+        if (!updatedUser) {
+            throw createError(400, "User not banned successfully");
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User banned successfully",
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const handelUnbanUserById = async (req, res, next) => {
+    try {
+        const userId = req.params.id;
+        await findWithId(User, userId);
+        const updates = { isBanned: false };
+        const updateOptions = {
+            new: true,
+            runValidators: true,
+            context: "query",
+        };
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updates, // {isBanned:false}
+            updateOptions
+        ).select("-password");
+
+        if (!updatedUser) {
+            throw createError(400, "User not unbanned successfully");
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User unbanned successfully",
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     handelGetUsers,
     handelGetUserByID,
@@ -265,4 +323,6 @@ module.exports = {
     handelProcessRegister,
     handelActivateUserAccount,
     handelUpdateUserById,
+    handelBanUserById,
+    handelUnbanUserById,
 };

@@ -10,6 +10,7 @@ const clientURL = process.env.CLIENT_URL;
 const uploadDir = process.env.UPLOAD_DIRECTORY;
 const maximumFileSize = process.env.MAX_FILE_SIZE;
 const allowedFileType = process.env.ALLOWED_FILE_TYPE;
+const jwtAccessKey = process.env.JWT_ACCESS_KEY;
 
 module.exports = {
     serverPort,
@@ -22,4 +23,5 @@ module.exports = {
     uploadDir,
     maximumFileSize,
     allowedFileType,
+    jwtAccessKey,
 };
