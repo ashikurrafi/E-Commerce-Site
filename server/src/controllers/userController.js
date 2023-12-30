@@ -3,12 +3,20 @@ const User = require("../models/userModel");
 const { successResponse } = require("./responseController");
 const { mongoose } = require("mongoose");
 const { findWithId } = require("../services/findItem");
-const { deleteImage } = require("../helper/deleteImage");
 const { jwtActivationKey, clientURL } = require("../secret");
 const { createJSONWebToken } = require("../helper/jsonWebToken");
 const emailWithNodeMailer = require("../helper/email");
 const jwt = require("jsonwebtoken");
 const path = require("path");
+const bcrypt = require("bcryptjs");
+const {
+    handelUserAction,
+    findUsers,
+    fineUserById,
+    deleteUserById,
+    updateUserById,
+    updateUserPasswordById,
+} = require("../services/userService");
 
 const handelGetUsers = async (req, res, next) => {
     try {
@@ -16,39 +24,16 @@ const handelGetUsers = async (req, res, next) => {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 5;
 
-        const searchRegularExpression = new RegExp(".*" + search + ".*", "i");
-
-        const filter = {
-            isAdmin: { $ne: true },
-            $or: [
-                { name: { $regex: searchRegularExpression } },
-                { email: { $regex: searchRegularExpression } },
-                { phone: { $regex: searchRegularExpression } },
-            ],
-        };
-
-        const options = { password: 0 };
-
-        const users = await User.find(filter, options)
-            .limit(limit)
-            .skip((page - 1) * limit);
-
-        const count = await User.find(filter).countDocuments();
-
-        if (!users) throw createError(404, "No user found");
+        const { users, pagination } = await findUsers(search, limit, page);
 
         return successResponse(res, {
             statusCode: 200,
             message: "Users returned successfully",
             payload: {
                 users,
-                pagination: {
-                    totalPages: Math.ceil(count / limit),
-                    currentPage: page,
-                    previousPage: page - 1 > 0 ? page - 1 : null,
-                    nextPage:
-                        page + 1 <= Math.ceil(count / limit) ? page + 1 : null,
-                },
+                pagination,
+                // users: users,
+                // pagination: pagination,
             },
         });
     } catch (error) {
@@ -61,7 +46,7 @@ const handelGetUserByID = async (req, res, next) => {
         const id = req.params.id;
         const options = { password: 0 };
 
-        const user = await findWithId(User, id, options);
+        const user = await fineUserById(id, options);
         return successResponse(res, {
             statusCode: 200,
             message: "User returned successfully",
@@ -80,16 +65,8 @@ const handelDeleteUserByID = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
-        const user = await findWithId(User, id, options);
 
-        const userImagePath = user.image;
-
-        deleteImage(userImagePath);
-
-        await User.findByIdAndDelete({
-            _id: id,
-            isAdmin: false,
-        });
+        await deleteUserById(id, options);
 
         return successResponse(res, {
             statusCode: 200,
@@ -207,111 +184,62 @@ const handelActivateUserAccount = async (req, res, next) => {
 const handelUpdateUserById = async (req, res, next) => {
     try {
         const userId = req.params.id;
-        const options = { password: 0 };
-        const user = await findWithId(User, userId, options);
-        const updateOptions = {
-            new: true,
-            runValidators: true,
-            context: "query",
-        };
 
-        let updates = {};
-
-        const allowedFields = ["name", "password", "phone", "address"];
-
-        for (const key in req.body) {
-            if (allowedFields.includes(key)) {
-                updates[key] = req.body[key];
-            } else if (key === "email") {
-                throw createError(400, "Email can't be updated");
-            }
-        }
-
-        const image = req.file?.path;
-        if (image) {
-            if (image.size > 1024 * 1024 * 2) {
-                throw createError(400, "Image is more than 2 MB");
-            }
-            updates.image = image;
-            user.image !== "default.png" && deleteImage(user.image);
-        }
-
-        // delete updates.email;
-
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            updates,
-            updateOptions
-        ).select("-password");
-
-        if (!updatedUser) {
-            throw createError(404, "User with this ID not exist");
-        }
-
+        const updatedUser = await updateUserById(userId, req);
         return successResponse(res, {
             statusCode: 200,
             message: "User updated successfully",
             payload: updatedUser,
         });
     } catch (error) {
+        if (error instanceof mongoose.Error.CastError) {
+            throw createError(404, "Invalid ID");
+        }
         next(error);
     }
 };
 
-const handelBanUserById = async (req, res, next) => {
+const handelManageUserStatusById = async (req, res, next) => {
     try {
         const userId = req.params.id;
-        await findWithId(User, userId);
-        const updates = { isBanned: true };
-        const updateOptions = {
-            new: true,
-            runValidators: true,
-            context: "query",
-        };
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            updates, // {isBanned:true}
-            updateOptions
-        ).select("-password");
+        const action = req.body.action;
 
-        if (!updatedUser) {
-            throw createError(400, "User not banned successfully");
-        }
+        const successMessage = await handelUserAction(userId, action);
 
         return successResponse(res, {
             statusCode: 200,
-            message: "User banned successfully",
+            message: successMessage,
         });
     } catch (error) {
+        if (error instanceof mongoose.Error.CastError) {
+            throw createError(404, "Invalid ID");
+        }
         next(error);
     }
 };
 
-const handelUnbanUserById = async (req, res, next) => {
+const handelUpdatePassword = async (req, res, next) => {
     try {
+        const { email, oldPassword, newPassword, confirmPassword } = req.body;
         const userId = req.params.id;
-        await findWithId(User, userId);
-        const updates = { isBanned: false };
-        const updateOptions = {
-            new: true,
-            runValidators: true,
-            context: "query",
-        };
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            updates, // {isBanned:false}
-            updateOptions
-        ).select("-password");
 
-        if (!updatedUser) {
-            throw createError(400, "User not unbanned successfully");
-        }
+        const updatedUser = await updateUserPasswordById(
+            userId,
+            email,
+            oldPassword,
+            newPassword,
+            confirmPassword
+        );
 
         return successResponse(res, {
             statusCode: 200,
-            message: "User unbanned successfully",
+            message: "Password updated successfully",
+            payload: { updatedUser },
         });
     } catch (error) {
+        if (error instanceof mongoose.Error.CastError) {
+            throw createError(404, "Invalid ID");
+        }
         next(error);
     }
 };
@@ -323,6 +251,6 @@ module.exports = {
     handelProcessRegister,
     handelActivateUserAccount,
     handelUpdateUserById,
-    handelBanUserById,
-    handelUnbanUserById,
+    handelManageUserStatusById,
+    handelUpdatePassword,
 };
