@@ -2,8 +2,10 @@ const createError = require("http-errors");
 const User = require("../models/userModel");
 const { deleteImage } = require("../helper/deleteImage");
 const mongoose = require("mongoose");
-const findWithId = require("../services//findItem");
+const findWithId = require("../services/findItem");
 const bcrypt = require("bcryptjs");
+const { clientURL, jwtResetPasswordKey } = require("../secret");
+const { createJSONWebToken } = require("../helper/jsonWebToken");
 
 const findUsers = async (search, limit, page) => {
     try {
@@ -165,6 +167,9 @@ const updateUserPasswordById = async (
             throw createError(400, "Old password incorrect, please try again");
         }
 
+        const updates = { $set: { password: newPassword } };
+        const updateOptions = { new: true };
+
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             updates, // { password: newPassword }
@@ -179,6 +184,34 @@ const updateUserPasswordById = async (
         if (error instanceof mongoose.Error.CastError) {
             throw createError(404, "Invalid ID");
         }
+        throw error;
+    }
+};
+
+const forgetUserPasswordByEmail = async (email) => {
+    try {
+        const userData = await User.findOne({ email: email });
+        if (!userData) {
+            throw createError(404, "User not found, Please register");
+        }
+
+        const token = createJSONWebToken({ email }, jwtResetPasswordKey, "10m");
+
+        const emailData = {
+            email,
+            subject: "Password reset email",
+            html: `<h2>Hello ${userData.name}</h2>
+            <p>Here is your password reset email, please click here to <a href="${clientURL}/api/users/reset-password/${token}" target="_blank">Reset password</a></p>`,
+        };
+
+        try {
+            // await emailWithNodeMailer(emailData);
+            return token;
+        } catch (emailError) {
+            next(createError(500, "failed to send password reset email"));
+            return;
+        }
+    } catch (error) {
         throw error;
     }
 };
@@ -227,4 +260,5 @@ module.exports = {
     deleteUserById,
     updateUserById,
     updateUserPasswordById,
+    forgetUserPasswordByEmail,
 };

@@ -8,10 +8,12 @@ const {
     handelUpdateUserById,
     handelManageUserStatusById,
     handelUpdatePassword,
+    handelForgetPassword,
 } = require("../controllers/userController");
 const {
     validateUserRegistration,
     validateUserUpdatePassword,
+    validateUserForgetPassword,
 } = require("../validators/auth");
 const runValidation = require("../validators");
 const uploadUserImage = require("../middlewares/uploadFiles");
@@ -22,9 +24,9 @@ const userRouter = express.Router();
 userRouter.post(
     "/process-register",
     isLoggedOut,
+    uploadUserImage.single("image"),
     validateUserRegistration,
     runValidation,
-    uploadUserImage.single("image"),
     handelProcessRegister
 );
 // userRouter.post(
@@ -57,6 +59,12 @@ userRouter.put(
     runValidation,
     isLoggedIn,
     handelUpdatePassword
+);
+userRouter.post(
+    "/forget-password",
+    validateUserForgetPassword,
+    runValidation,
+    handelForgetPassword
 );
 
 module.exports = userRouter;

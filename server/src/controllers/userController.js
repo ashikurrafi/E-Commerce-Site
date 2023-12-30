@@ -3,7 +3,11 @@ const User = require("../models/userModel");
 const { successResponse } = require("./responseController");
 const { mongoose } = require("mongoose");
 const { findWithId } = require("../services/findItem");
-const { jwtActivationKey, clientURL } = require("../secret");
+const {
+    jwtActivationKey,
+    clientURL,
+    jwtResetPasswordKey,
+} = require("../secret");
 const { createJSONWebToken } = require("../helper/jsonWebToken");
 const emailWithNodeMailer = require("../helper/email");
 const jwt = require("jsonwebtoken");
@@ -16,6 +20,7 @@ const {
     deleteUserById,
     updateUserById,
     updateUserPasswordById,
+    forgetUserPasswordByEmail,
 } = require("../services/userService");
 
 const handelGetUsers = async (req, res, next) => {
@@ -87,7 +92,7 @@ const handelProcessRegister = async (req, res, next) => {
 
         const image = req.file?.path;
 
-        if (image && image.size > 1024 * 10242) {
+        if (image && image.size > 1024 * 1024) {
             throw createError(400, "File size too big, maximum size is 2 MB");
         }
 
@@ -244,6 +249,24 @@ const handelUpdatePassword = async (req, res, next) => {
     }
 };
 
+const handelForgetPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const token = await forgetUserPasswordByEmail(email);
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: `Please check ${email} for reset password`,
+            payload: { token },
+        });
+    } catch (error) {
+        if (error instanceof mongoose.Error.CastError) {
+            throw createError(404, "Invalid ID");
+        }
+        next(error);
+    }
+};
+
 module.exports = {
     handelGetUsers,
     handelGetUserByID,
@@ -253,4 +276,5 @@ module.exports = {
     handelUpdateUserById,
     handelManageUserStatusById,
     handelUpdatePassword,
+    handelForgetPassword,
 };
