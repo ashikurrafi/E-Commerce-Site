@@ -31,14 +31,7 @@ userRouter.post(
     runValidation,
     handelProcessRegister
 );
-// userRouter.post(
-//     "/process-register",
-//     isLoggedOut,
-//     uploadUserImage.single("image"),
-//     validateUserRegistration,
-//     runValidation,
-//     handelProcessRegister
-// );
+
 userRouter.post("/activate", isLoggedOut, handelActivateUserAccount);
 userRouter.get("/", isLoggedIn, isAdmin, handelGetUsers);
 userRouter.get("/:id([0-9a-fA-F]{24})", isLoggedIn, handelGetUserByID);

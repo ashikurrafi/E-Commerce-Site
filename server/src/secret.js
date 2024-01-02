@@ -12,6 +12,7 @@ const maximumFileSize = process.env.MAX_FILE_SIZE;
 const allowedFileType = process.env.ALLOWED_FILE_TYPE;
 const jwtAccessKey = process.env.JWT_ACCESS_KEY;
 const jwtResetPasswordKey = process.env.JWT_RESET_PASSWORD_KEY;
+const jwtRefreshKey = process.env.JWT_REFRESH_KEY;
 
 module.exports = {
     serverPort,
@@ -26,4 +27,5 @@ module.exports = {
     allowedFileType,
     jwtAccessKey,
     jwtResetPasswordKey,
+    jwtRefreshKey,
 };

@@ -1,6 +1,11 @@
 const express = require("express");
 const runValidation = require("../validators");
-const { handelLogin, handelLogout } = require("../controllers/authController");
+const {
+    handelLogin,
+    handelLogout,
+    handelRefreshToken,
+    handelProtectedRoute,
+} = require("../controllers/authController");
 const { isLoggedOut, isLoggedIn } = require("../middlewares/auth");
 const { validateUserLogin } = require("../validators/auth");
 
@@ -14,5 +19,7 @@ authRouter.post(
     handelLogin
 );
 authRouter.post("/logout", isLoggedIn, handelLogout);
+authRouter.get("/refresh-token", handelRefreshToken);
+authRouter.get("/protected", handelProtectedRoute);
 
 module.exports = authRouter;

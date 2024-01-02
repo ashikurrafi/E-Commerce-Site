@@ -1,10 +1,14 @@
 const User = require("../models/userModel");
 const createError = require("http-errors");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const { successResponse } = require("./responseController");
 const { createJSONWebToken } = require("../helper/jsonWebToken");
-const { jwtAccessKey } = require("../secret");
-const { setAccessTokenCookie } = require("../helper/cookie");
+const { jwtAccessKey, jwtRefreshKey } = require("../secret");
+const {
+    setAccessTokenCookie,
+    setRefreshTokenCookie,
+} = require("../helper/cookie");
 
 const handelLogin = async (req, res, next) => {
     try {
@@ -29,11 +33,11 @@ const handelLogin = async (req, res, next) => {
         }
 
         // gen token cookie
-        const accessToken = createJSONWebToken({ user }, jwtAccessKey, "15m");
+        const accessToken = createJSONWebToken({ user }, jwtAccessKey, "1m"); // 15min
         setAccessTokenCookie(res, accessToken);
 
-        // const refreshToken = createJSONWebToken({ user }, jwtrefreshkey, "7d");
-        // setRefreshTokenCookie(res, refreshToken);
+        const refreshToken = createJSONWebToken({ user }, jwtRefreshKey, "7d");
+        setRefreshTokenCookie(res, refreshToken);
 
         const userWithoutPassword = user.toObject();
         delete userWithoutPassword.password;
@@ -42,6 +46,51 @@ const handelLogin = async (req, res, next) => {
             statusCode: 200,
             message: "User logged in successfully",
             payload: { userWithoutPassword },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const handelRefreshToken = async (req, res, next) => {
+    try {
+        const oldRefreshToken = req.cookies.refreshToken;
+        // Verify old refresh token
+        const decodedToken = jwt.verify(oldRefreshToken, jwtRefreshKey);
+        if (!decodedToken) {
+            throw createError(401, "Invalid refresh token");
+        }
+
+        const accessToken = createJSONWebToken(
+            decodedToken.user,
+            jwtAccessKey,
+            "5m"
+        );
+        setAccessTokenCookie(res, accessToken);
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "New access token generated",
+            payload: {},
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const handelProtectedRoute = async (req, res, next) => {
+    try {
+        const accessToken = req.cookies.accessToken;
+
+        const decodedToken = jwt.verify(accessToken, jwtAccessKey);
+        if (!decodedToken) {
+            throw createError(401, "Invalid access token");
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "Protected resource access successfully",
+            payload: {},
         });
     } catch (error) {
         next(error);
@@ -65,5 +114,7 @@ const handelLogout = async (req, res, next) => {
 
 module.exports = {
     handelLogin,
+    handelRefreshToken,
+    handelProtectedRoute,
     handelLogout,
 };
