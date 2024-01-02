@@ -9,11 +9,13 @@ const {
     handelManageUserStatusById,
     handelUpdatePassword,
     handelForgetPassword,
+    handelResetPassword,
 } = require("../controllers/userController");
 const {
     validateUserRegistration,
     validateUserUpdatePassword,
     validateUserForgetPassword,
+    validateUserResetPassword,
 } = require("../validators/auth");
 const runValidation = require("../validators");
 const uploadUserImage = require("../middlewares/uploadFiles");
@@ -65,6 +67,12 @@ userRouter.post(
     validateUserForgetPassword,
     runValidation,
     handelForgetPassword
+);
+userRouter.put(
+    "/reset-password",
+    validateUserResetPassword,
+    runValidation,
+    handelResetPassword
 );
 
 module.exports = userRouter;

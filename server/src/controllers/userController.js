@@ -21,6 +21,7 @@ const {
     updateUserById,
     updateUserPasswordById,
     forgetUserPasswordByEmail,
+    resetUserPassword,
 } = require("../services/userService");
 
 const handelGetUsers = async (req, res, next) => {
@@ -267,6 +268,23 @@ const handelForgetPassword = async (req, res, next) => {
     }
 };
 
+const handelResetPassword = async (req, res, next) => {
+    try {
+        const { token, password } = req.body;
+        await resetUserPassword(token, password);
+        return successResponse(res, {
+            statusCode: 200,
+            message: "Password reset successfully",
+            payload: {},
+        });
+    } catch (error) {
+        if (error instanceof mongoose.Error.CastError) {
+            throw createError(404, "Invalid ID");
+        }
+        next(error);
+    }
+};
+
 module.exports = {
     handelGetUsers,
     handelGetUserByID,
@@ -277,4 +295,5 @@ module.exports = {
     handelManageUserStatusById,
     handelUpdatePassword,
     handelForgetPassword,
+    handelResetPassword,
 };
