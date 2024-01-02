@@ -14,7 +14,7 @@ const jwt = require("jsonwebtoken");
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const {
-    handelUserAction,
+    handleUserAction,
     findUsers,
     fineUserById,
     deleteUserById,
@@ -24,7 +24,7 @@ const {
     resetUserPassword,
 } = require("../services/userService");
 
-const handelGetUsers = async (req, res, next) => {
+const handleGetUsers = async (req, res, next) => {
     try {
         const search = req.query.search || "";
         const page = Number(req.query.page) || 1;
@@ -38,8 +38,6 @@ const handelGetUsers = async (req, res, next) => {
             payload: {
                 users,
                 pagination,
-                // users: users,
-                // pagination: pagination,
             },
         });
     } catch (error) {
@@ -47,7 +45,7 @@ const handelGetUsers = async (req, res, next) => {
     }
 };
 
-const handelGetUserByID = async (req, res, next) => {
+const handleGetUserByID = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
@@ -67,7 +65,7 @@ const handelGetUserByID = async (req, res, next) => {
     }
 };
 
-const handelDeleteUserByID = async (req, res, next) => {
+const handleDeleteUserByID = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
@@ -87,14 +85,14 @@ const handelDeleteUserByID = async (req, res, next) => {
     }
 };
 
-const handelProcessRegister = async (req, res, next) => {
+const handleProcessRegister = async (req, res, next) => {
     try {
         const { name, email, password, phone, address } = req.body;
 
         const image = req.file?.path;
 
-        if (image && image.size > 1024 * 1024) {
-            throw createError(400, "File size too big, maximum size is 2 MB");
+        if (image && image.size > 1024 * 1024 * 2) {
+            throw createError(400, "Image size should be less than 2MB");
         }
 
         const userExist = await User.exists({ email: email });
@@ -139,7 +137,7 @@ const handelProcessRegister = async (req, res, next) => {
 
         return successResponse(res, {
             statusCode: 200,
-            message: `Check ${email} for activating account`,
+            message: `Check ${email} for activate account`,
             payload: {
                 token,
             },
@@ -153,7 +151,7 @@ const handelProcessRegister = async (req, res, next) => {
     }
 };
 
-const handelActivateUserAccount = async (req, res, next) => {
+const handleActivateUserAccount = async (req, res, next) => {
     try {
         const token = req.body.token;
         if (!token) {
@@ -187,7 +185,7 @@ const handelActivateUserAccount = async (req, res, next) => {
     }
 };
 
-const handelUpdateUserById = async (req, res, next) => {
+const handleUpdateUserById = async (req, res, next) => {
     try {
         const userId = req.params.id;
 
@@ -205,12 +203,12 @@ const handelUpdateUserById = async (req, res, next) => {
     }
 };
 
-const handelManageUserStatusById = async (req, res, next) => {
+const handleManageUserStatusById = async (req, res, next) => {
     try {
         const userId = req.params.id;
         const action = req.body.action;
 
-        const successMessage = await handelUserAction(userId, action);
+        const successMessage = await handleUserAction(userId, action);
 
         return successResponse(res, {
             statusCode: 200,
@@ -224,7 +222,7 @@ const handelManageUserStatusById = async (req, res, next) => {
     }
 };
 
-const handelUpdatePassword = async (req, res, next) => {
+const handleUpdatePassword = async (req, res, next) => {
     try {
         const { email, oldPassword, newPassword, confirmPassword } = req.body;
         const userId = req.params.id;
@@ -250,7 +248,7 @@ const handelUpdatePassword = async (req, res, next) => {
     }
 };
 
-const handelForgetPassword = async (req, res, next) => {
+const handleForgetPassword = async (req, res, next) => {
     try {
         const { email } = req.body;
         const token = await forgetUserPasswordByEmail(email);
@@ -268,7 +266,7 @@ const handelForgetPassword = async (req, res, next) => {
     }
 };
 
-const handelResetPassword = async (req, res, next) => {
+const handleResetPassword = async (req, res, next) => {
     try {
         const { token, password } = req.body;
         await resetUserPassword(token, password);
@@ -286,14 +284,14 @@ const handelResetPassword = async (req, res, next) => {
 };
 
 module.exports = {
-    handelGetUsers,
-    handelGetUserByID,
-    handelDeleteUserByID,
-    handelProcessRegister,
-    handelActivateUserAccount,
-    handelUpdateUserById,
-    handelManageUserStatusById,
-    handelUpdatePassword,
-    handelForgetPassword,
-    handelResetPassword,
+    handleGetUsers,
+    handleGetUserByID,
+    handleDeleteUserByID,
+    handleProcessRegister,
+    handleActivateUserAccount,
+    handleUpdateUserById,
+    handleManageUserStatusById,
+    handleUpdatePassword,
+    handleForgetPassword,
+    handleResetPassword,
 };

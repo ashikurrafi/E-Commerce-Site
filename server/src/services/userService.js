@@ -30,8 +30,7 @@ const findUsers = async (search, limit, page) => {
         const count = await User.find(filter).countDocuments();
 
         if (!users || users.length == 0)
-            throw createError(404, "No user found");
-
+            throw createError(404, "User not found");
         return {
             users,
             pagination: {
@@ -68,16 +67,13 @@ const deleteUserById = async (id, options = {}) => {
         });
 
         if (!user) {
-            throw createError(404, "User with this ID not found");
+            throw createError(404, "User with this ID is not found");
         }
 
         const userImagePath = user.image;
         if (userImagePath) {
             await deleteImage(userImagePath);
         }
-        // if (user && user.image) {
-        //     await deleteImage(userImagePath);
-        // }
     } catch (error) {
         if (error instanceof mongoose.Error.CastError) {
             throw createError(404, "Invalid ID");
@@ -104,14 +100,14 @@ const updateUserById = async (userId, req) => {
             if (allowedFields.includes(key)) {
                 updates[key] = req.body[key];
             } else if (key === "email") {
-                throw createError(400, "Email can't be updated");
+                throw createError(400, "Email is not allowed to update");
             }
         }
 
         const image = req.file?.path;
         if (image) {
             if (image.size > 1024 * 1024 * 2) {
-                throw createError(400, "Image is more than 2 MB");
+                throw createError(400, "Image size must be less than 2MB");
             }
             updates.image = image;
             user.image !== "default.png" && deleteImage(user.image);
@@ -155,7 +151,7 @@ const updateUserPasswordById = async (
         if (newPassword !== confirmPassword) {
             throw createError(
                 400,
-                "New password and confirm password did not match"
+                "New password and Confirm password must be same, they didn't match"
             );
         }
 
@@ -165,7 +161,7 @@ const updateUserPasswordById = async (
             user.password
         );
         if (!isPasswordMatch) {
-            throw createError(400, "Old password incorrect, please try again");
+            throw createError(400, "Old password is incorrect");
         }
 
         const updates = { $set: { password: newPassword } };
@@ -178,7 +174,7 @@ const updateUserPasswordById = async (
         ).select("-password");
 
         if (!updatedUser) {
-            throw createError(400, "Password not updated successfully");
+            throw createError(400, "Password not updated");
         }
         return updatedUser;
     } catch (error) {
@@ -209,7 +205,7 @@ const forgetUserPasswordByEmail = async (email) => {
             // await emailWithNodeMailer(emailData);
             return token;
         } catch (emailError) {
-            next(createError(500, "failed to send password reset email"));
+            next(createError(400, "Failed to send password reset email"));
             return;
         }
     } catch (error) {
@@ -243,7 +239,7 @@ const resetUserPassword = async (token, password) => {
     }
 };
 
-const handelUserAction = async (userId, action) => {
+const handleUserAction = async (userId, action) => {
     try {
         let updates;
         let successMessage;
@@ -281,7 +277,7 @@ const handelUserAction = async (userId, action) => {
 };
 
 module.exports = {
-    handelUserAction,
+    handleUserAction,
     findUsers,
     fineUserById,
     deleteUserById,

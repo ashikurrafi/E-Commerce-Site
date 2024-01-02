@@ -28,27 +28,3 @@ const uploadUserImage = multer({
 });
 
 module.exports = uploadUserImage;
-
-// const storage = multer.diskStorage();
-
-// const fileFilter = (req, file, cb) => {
-//     if (!file.mimetype.startsWith("image/")) {
-//         return cb(new Error("Only image are allowed"), false);
-//     }
-//     if (file.size > MAX_FILE_SIZE) {
-//         return cb(
-//             new Error("Image size exceed maximum limit (Max 2 MB)"),
-//             false
-//         );
-//     }
-//     if (!ALLOWED_FILE_TYPE.includes(file.mimetype)) {
-//         return cb(new Error("Image type is not allowed"), false);
-//     }
-//     cb(null, true);
-// };
-
-// const upload = multer({
-//     storage: storage,
-//     fileFilter: fileFilter,
-// });
-// module.exports = upload;

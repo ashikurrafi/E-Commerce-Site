@@ -10,7 +10,7 @@ const {
     setRefreshTokenCookie,
 } = require("../helper/cookie");
 
-const handelLogin = async (req, res, next) => {
+const handleLogin = async (req, res, next) => {
     try {
         // email and password form req body
         const { email, password } = req.body;
@@ -29,11 +29,11 @@ const handelLogin = async (req, res, next) => {
         }
         // is user banned or not ?
         if (user.isBanned) {
-            throw createError(403, "User banned please contact 01719697406");
+            throw createError(403, "User banned, please contact 01719697406");
         }
 
         // gen token cookie
-        const accessToken = createJSONWebToken({ user }, jwtAccessKey, "1m"); // 15min
+        const accessToken = createJSONWebToken({ user }, jwtAccessKey, "5m"); // 15min
         setAccessTokenCookie(res, accessToken);
 
         const refreshToken = createJSONWebToken({ user }, jwtRefreshKey, "7d");
@@ -52,7 +52,7 @@ const handelLogin = async (req, res, next) => {
     }
 };
 
-const handelRefreshToken = async (req, res, next) => {
+const handleRefreshToken = async (req, res, next) => {
     try {
         const oldRefreshToken = req.cookies.refreshToken;
         // Verify old refresh token
@@ -78,7 +78,7 @@ const handelRefreshToken = async (req, res, next) => {
     }
 };
 
-const handelProtectedRoute = async (req, res, next) => {
+const handleProtectedRoute = async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
 
@@ -97,7 +97,7 @@ const handelProtectedRoute = async (req, res, next) => {
     }
 };
 
-const handelLogout = async (req, res, next) => {
+const handleLogout = async (req, res, next) => {
     try {
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken");
@@ -113,8 +113,8 @@ const handelLogout = async (req, res, next) => {
 };
 
 module.exports = {
-    handelLogin,
-    handelRefreshToken,
-    handelProtectedRoute,
-    handelLogout,
+    handleLogin,
+    handleRefreshToken,
+    handleProtectedRoute,
+    handleLogout,
 };

@@ -7,7 +7,9 @@ const validateUserRegistration = [
         .notEmpty()
         .withMessage("Name is required")
         .isLength({ min: 3, max: 50 })
-        .withMessage("Name must be in 3-50 characters"),
+        .withMessage(
+            "Name must be minimum 3 character long and maximum 50 characters long"
+        ),
 
     body("email")
         .trim()
@@ -33,20 +35,12 @@ const validateUserRegistration = [
         .trim()
         .notEmpty()
         .withMessage("Address is required")
-        .isLength({ min: 3 })
+        .isLength({ min: 6 })
         .withMessage("Address must be minimum 6 character long"),
 
     body("phone").trim().notEmpty().withMessage("Phone number is required"),
 
     body("image").optional().isString().withMessage("User image is optional"),
-    // body("image")
-    //     .custom((value, { req }) => {
-    //         if (!req.file || !req.file.buffer) {
-    //             throw new Error("User image is required");
-    //         }
-    //         return true;
-    //     })
-    //     .withMessage("Image is required"),
 ];
 
 const validateUserLogin = [
