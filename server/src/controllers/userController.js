@@ -23,6 +23,8 @@ const {
     forgetUserPasswordByEmail,
     resetUserPassword,
 } = require("../services/userService");
+const checkUserExist = require("../helper/checkUserExist");
+const sendEmail = require("../helper/sendEmail");
 
 const handleGetUsers = async (req, res, next) => {
     try {
@@ -95,7 +97,7 @@ const handleProcessRegister = async (req, res, next) => {
             throw createError(400, "Image size should be less than 2MB");
         }
 
-        const userExist = await User.exists({ email: email });
+        const emailExist = await checkUserExist(email);
 
         if (userExist) {
             throw createError(
@@ -129,11 +131,7 @@ const handleProcessRegister = async (req, res, next) => {
         };
 
         // Send email
-        try {
-            // await emailWithNodeMailer(emailData);
-        } catch (emailError) {
-            next(createError(500, "Failed to send verification email"));
-        }
+        sendEmail(emailData);
 
         return successResponse(res, {
             statusCode: 200,

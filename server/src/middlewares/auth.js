@@ -1,11 +1,12 @@
 const createError = require("http-errors");
 const jwt = require("jsonwebtoken");
 const { jwtAccessKey } = require("../secret");
+const logger = require("../controllers/loggerController");
 
 const isLoggedIn = async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
-        console.log("info", accessToken);
+        logger.log("info", accessToken);
         if (!accessToken) {
             throw createError(401, "Access token not found, please login");
         }
@@ -16,7 +17,7 @@ const isLoggedIn = async (req, res, next) => {
         // req.body.userId = decoded._id;
 
         req.user = decoded.user;
-        console.log("info", decoded);
+        logger.log("info", decoded);
         next();
     } catch (error) {
         return next(error);
@@ -26,7 +27,7 @@ const isLoggedIn = async (req, res, next) => {
 const isLoggedOut = async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
-        console.log("info", accessToken);
+        logger.log("info", accessToken);
         if (accessToken) {
             try {
                 const decoded = jwt.verify(accessToken, jwtAccessKey);
@@ -45,7 +46,7 @@ const isLoggedOut = async (req, res, next) => {
 
 const isAdmin = async (req, res, next) => {
     try {
-        console.log("info", "User : ", req.user.isAdmin);
+        logger.log("info", "User : ", req.user.isAdmin);
         if (!req.user.isAdmin) {
             throw createError(403, "Forbidden, you must be an admin to access");
         }

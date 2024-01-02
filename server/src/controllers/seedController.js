@@ -1,5 +1,6 @@
 const data = require("../data");
 const User = require("../models/userModel");
+const logger = require("./loggerController");
 
 const seedUser = async (req, res, next) => {
     try {
@@ -12,7 +13,7 @@ const seedUser = async (req, res, next) => {
         // Successful response
         return res.status(200).json(users);
     } catch (error) {
-        console.log("Error seeding data:", error);
+        logger.log("error", "Error seeding data:", error);
         next(error);
     }
 };

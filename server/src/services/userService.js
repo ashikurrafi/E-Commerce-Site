@@ -7,6 +7,7 @@ const bcrypt = require("bcryptjs");
 const { clientURL, jwtResetPasswordKey } = require("../secret");
 const { createJSONWebToken } = require("../helper/jsonWebToken");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../helper/sendEmail");
 
 const findUsers = async (search, limit, page) => {
     try {
@@ -200,14 +201,8 @@ const forgetUserPasswordByEmail = async (email) => {
             html: `<h2>Hello ${userData.name}</h2>
             <p>Here is your password reset email, please click here to <a href="${clientURL}/api/users/reset-password/${token}" target="_blank">Reset password</a></p>`,
         };
-
-        try {
-            // await emailWithNodeMailer(emailData);
-            return token;
-        } catch (emailError) {
-            next(createError(400, "Failed to send password reset email"));
-            return;
-        }
+        //Send mail
+        sendEmail(emailData);
     } catch (error) {
         throw error;
     }
