@@ -6,10 +6,11 @@ const {
     getCategories,
     getCategory,
     updateCategory,
+    deleteCategory,
 } = require("../services/categoryService");
 const createError = require("http-errors");
 
-const handelCreateCategory = async (req, res, next) => {
+const handleCreateCategory = async (req, res, next) => {
     try {
         const { name } = req.body;
 
@@ -24,7 +25,7 @@ const handelCreateCategory = async (req, res, next) => {
     }
 };
 
-const handelGetCategories = async (req, res, next) => {
+const handleGetCategories = async (req, res, next) => {
     try {
         const categories = await getCategories();
         if (!categories) {
@@ -40,7 +41,7 @@ const handelGetCategories = async (req, res, next) => {
     }
 };
 
-const handelGetCategory = async (req, res, next) => {
+const handleGetCategory = async (req, res, next) => {
     try {
         const { slug } = req.params;
         const category = await getCategory(slug);
@@ -59,7 +60,7 @@ const handelGetCategory = async (req, res, next) => {
     }
 };
 
-const handelUpdateCategory = async (req, res, next) => {
+const handleUpdateCategory = async (req, res, next) => {
     try {
         const { name } = req.body;
         const { slug } = req.params;
@@ -79,9 +80,29 @@ const handelUpdateCategory = async (req, res, next) => {
     }
 };
 
+const handleDeleteCategory = async (req, res, next) => {
+    try {
+        const { slug } = req.params;
+        const result = await deleteCategory(slug);
+
+        if (!result) {
+            throw createError(404, "Category not found");
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: `Category deleted successfully`,
+            payload: { result },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
-    handelCreateCategory,
-    handelGetCategories,
-    handelGetCategory,
-    handelUpdateCategory,
+    handleCreateCategory,
+    handleGetCategories,
+    handleGetCategory,
+    handleUpdateCategory,
+    handleDeleteCategory,
 };

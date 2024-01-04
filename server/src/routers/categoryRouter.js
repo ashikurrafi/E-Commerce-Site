@@ -1,9 +1,10 @@
 const express = require("express");
 const {
-    handelCreateCategory,
-    handelGetCategories,
-    handelGetCategory,
-    handelUpdateCategory,
+    handleCreateCategory,
+    handleGetCategories,
+    handleGetCategory,
+    handleUpdateCategory,
+    handleDeleteCategory,
 } = require("../controllers/categoryController");
 const { validateCategory } = require("../validators/category");
 const runValidation = require("../validators");
@@ -17,17 +18,18 @@ categoryRouter.post(
     runValidation,
     isLoggedIn,
     isAdmin,
-    handelCreateCategory
+    handleCreateCategory
 );
 
-categoryRouter.get("/", handelGetCategories);
-categoryRouter.get("/:slug", handelGetCategory);
+categoryRouter.get("/", handleGetCategories);
+categoryRouter.get("/:slug", handleGetCategory);
 categoryRouter.put(
     "/:slug",
     validateCategory,
     isLoggedIn,
     isAdmin,
-    handelUpdateCategory
+    handleUpdateCategory
 );
+categoryRouter.delete("/:slug", isLoggedIn, isAdmin, handleDeleteCategory);
 
 module.exports = categoryRouter;
