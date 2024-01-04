@@ -5,7 +5,9 @@ const {
     createCategory,
     getCategories,
     getCategory,
+    updateCategory,
 } = require("../services/categoryService");
+const createError = require("http-errors");
 
 const handelCreateCategory = async (req, res, next) => {
     try {
@@ -57,8 +59,29 @@ const handelGetCategory = async (req, res, next) => {
     }
 };
 
+const handelUpdateCategory = async (req, res, next) => {
+    try {
+        const { name } = req.body;
+        const { slug } = req.params;
+        const UpdatedCategory = await updateCategory(name, slug);
+
+        if (!UpdatedCategory) {
+            throw createError(404, "Category not found");
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: `Category updated successfully`,
+            payload: { UpdatedCategory },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     handelCreateCategory,
     handelGetCategories,
     handelGetCategory,
+    handelUpdateCategory,
 };

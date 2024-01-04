@@ -3,6 +3,7 @@ const {
     handelCreateCategory,
     handelGetCategories,
     handelGetCategory,
+    handelUpdateCategory,
 } = require("../controllers/categoryController");
 const { validateCategory } = require("../validators/category");
 const runValidation = require("../validators");
@@ -20,6 +21,7 @@ categoryRouter.post(
 );
 
 categoryRouter.get("/", handelGetCategories);
-categoryRouter.get("/", handelGetCategory);
+categoryRouter.get("/:slug", handelGetCategory);
+categoryRouter.put("/:slug", handelUpdateCategory);
 
 module.exports = categoryRouter;

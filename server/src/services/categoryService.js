@@ -1,10 +1,10 @@
 const slugify = require("slugify");
 const Category = require("../models/categoryModel");
 
-const createCategory = async (categoryName) => {
+const createCategory = async (name) => {
     const newCategory = await Category.create({
-        name: categoryName,
-        slug: slugify(categoryName),
+        name: name,
+        slug: slugify(name),
     });
     return newCategory;
 };
@@ -17,8 +17,21 @@ const getCategory = async (slug) => {
     return await Category.find({ slug }).select("name slug").lean();
 };
 
+const updateCategory = async (name, slug) => {
+    const filter = { slug };
+    const updates = { $set: { name: name, slug: slugify(name) } };
+    const options = { new: true };
+    const updateCategory = await Category.findOneAndUpdate(
+        filter,
+        updates,
+        options
+    );
+    return updateCategory;
+};
+
 module.exports = {
     createCategory,
     getCategories,
     getCategory,
+    updateCategory,
 };
