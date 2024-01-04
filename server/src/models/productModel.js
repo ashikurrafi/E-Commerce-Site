@@ -1,5 +1,5 @@
 const { Schema, model } = require("mongoose");
-const { defaultImagePath } = require("../secret");
+const { defaultProductImagePath } = require("../secret");
 
 const productsSchema = new Schema(
     {
@@ -57,16 +57,10 @@ const productsSchema = new Schema(
             type: Number,
             default: 0, // Shipping free == 0
         },
-        // image: {
-        //     type: Buffer,
-        //     contentType: String,
-        //     required: [true, "Product image is required"],
-        //     // default: defaultImagePath,
-        // },
+
         image: {
             type: String,
-            default: defaultImagePath,
-            required: [true, "Product image is required"],
+            default: defaultProductImagePath,
         },
         category: {
             type: Schema.Types.ObjectId,
