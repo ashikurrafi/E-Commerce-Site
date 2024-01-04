@@ -22,6 +22,12 @@ categoryRouter.post(
 
 categoryRouter.get("/", handelGetCategories);
 categoryRouter.get("/:slug", handelGetCategory);
-categoryRouter.put("/:slug", handelUpdateCategory);
+categoryRouter.put(
+    "/:slug",
+    validateCategory,
+    isLoggedIn,
+    isAdmin,
+    handelUpdateCategory
+);
 
 module.exports = categoryRouter;
