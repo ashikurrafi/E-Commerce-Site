@@ -27,6 +27,38 @@ const createProduct = async (productData, image) => {
     return products;
 };
 
+const getAllProducts = async (page = 1, limit = 4, filter = {}) => {
+    const products = await Products.find(filter)
+        .populate("category")
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+
+    if (!products) {
+        throw createError(404, "Products not found");
+    }
+
+    const count = await Products.find(filter).countDocuments();
+    return {
+        products,
+        count,
+        totalPages: Math.ceil(count / limit),
+        currentPage: page,
+    };
+};
+
+const getSingleProducts = async (slug) => {
+    const product = await Products.findOne({ slug }).populate("category");
+
+    if (!product) {
+        throw createError(404, "No product found");
+    }
+
+    return product;
+};
+
 module.exports = {
     createProduct,
+    getAllProducts,
+    getSingleProducts,
 };
