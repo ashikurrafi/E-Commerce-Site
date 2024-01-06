@@ -2,10 +2,11 @@ const createError = require("http-errors");
 const {
     createProduct,
     getAllProducts,
-    getSingleProducts,
+    getSingleProduct,
+    deleteProducts,
+    updateProducts,
 } = require("../services/productService");
 const { successResponse } = require("./responseController");
-const Products = require("../models/productModel");
 
 const handleCreateProducts = async (req, res, next) => {
     try {
@@ -15,7 +16,7 @@ const handleCreateProducts = async (req, res, next) => {
 
         return successResponse(res, {
             statusCode: 200,
-            message: `Product (${name}) created successfully`,
+            message: `Product created successfully`,
             payload: { product },
         });
     } catch (error) {
@@ -64,7 +65,7 @@ const handleGetAllProducts = async (req, res, next) => {
 const handleGetProduct = async (req, res, next) => {
     try {
         const { slug } = req.params;
-        const product = await getSingleProducts(slug);
+        const product = await getSingleProduct(slug);
         return successResponse(res, {
             statusCode: 200,
             message: `Product ${slug} returned successfully`,
@@ -75,8 +76,40 @@ const handleGetProduct = async (req, res, next) => {
     }
 };
 
+const handelDeleteProducts = async (req, res, next) => {
+    try {
+        const { slug } = req.params;
+        const product = await deleteProducts(slug);
+        return successResponse(res, {
+            statusCode: 200,
+            message: `Product ${slug} deleted successfully`,
+            payload: { product },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const handelUpdateProduct = async (req, res, next) => {
+    try {
+        const { slug } = req.params;
+
+        const updatedProduct = await updateProducts(slug, req);
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "Product updated successfully",
+            payload: updatedProduct,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     handleCreateProducts,
     handleGetAllProducts,
     handleGetProduct,
+    handelDeleteProducts,
+    handelUpdateProduct,
 };

@@ -6,9 +6,9 @@ const deleteImage = async (userImagePath) => {
     try {
         await fs.access(userImagePath);
         await fs.unlink(userImagePath);
-        logger.log("info", "User image deleted");
+        logger.log("info", "Image deleted");
     } catch (error) {
-        logger.log("error", "User image dose not exist");
+        logger.log("error", "Image dose not exist");
     }
 };
 module.exports = { deleteImage };

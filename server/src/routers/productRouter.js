@@ -6,6 +6,8 @@ const {
     handleCreateProducts,
     handleGetAllProducts,
     handleGetProduct,
+    handelDeleteProducts,
+    handelUpdateProduct,
 } = require("../controllers/productsController");
 const { isLoggedIn, isAdmin } = require("../middlewares/auth");
 
@@ -22,8 +24,14 @@ productRouter.post(
     isAdmin,
     handleCreateProducts
 );
-
 productRouter.get("/", handleGetAllProducts);
 productRouter.get("/:slug", handleGetProduct);
-
+productRouter.delete("/:slug", isLoggedIn, isAdmin, handelDeleteProducts);
+productRouter.put(
+    "/:slug",
+    uploadProductImage.single("image"),
+    isLoggedIn,
+    isAdmin,
+    handelUpdateProduct
+);
 module.exports = productRouter;

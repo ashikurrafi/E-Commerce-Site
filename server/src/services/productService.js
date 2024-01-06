@@ -1,6 +1,7 @@
 const slugify = require("slugify");
 const Products = require("../models/productModel");
 const createError = require("http-errors");
+const { deleteImage } = require("../helper/deleteImage");
 
 const createProduct = async (productData, image) => {
     console.log(productData);
@@ -47,7 +48,7 @@ const getAllProducts = async (page = 1, limit = 4, filter = {}) => {
     };
 };
 
-const getSingleProducts = async (slug) => {
+const getSingleProduct = async (slug) => {
     const product = await Products.findOne({ slug }).populate("category");
 
     if (!product) {
@@ -57,8 +58,81 @@ const getSingleProducts = async (slug) => {
     return product;
 };
 
+const deleteProducts = async (slug) => {
+    const product = await Products.findOneAndDelete({ slug });
+
+    if (!product) {
+        throw createError(404, "No product found");
+    }
+
+    if (product.image) {
+        await deleteImage(product.image);
+    }
+    return product;
+};
+
+const updateProducts = async (slug, req) => {
+    try {
+        const product = await Products.findOne({ slug: slug });
+        if (!product) {
+            throw createError(404, "No product found");
+        }
+
+        const updateOptions = {
+            new: true,
+            runValidators: true,
+            context: "query",
+        };
+
+        let updates = {};
+
+        const allowedFields = [
+            "name",
+            "description",
+            "price",
+            "sold",
+            "quantity",
+            "shipping",
+        ];
+
+        for (const key in req.body) {
+            if (allowedFields.includes(key)) {
+                if (key === "name") {
+                    updates.slug = slugify(req.body[key]);
+                }
+
+                updates[key] = req.body[key];
+            }
+        }
+
+        const image = req.file?.path;
+        if (image) {
+            if (image.size > 1024 * 1024 * 2) {
+                throw new Error("file is too big, must less than 2MB");
+            }
+            updates.image = image;
+            product.image !== "default.png" && deleteImage(product.image);
+        }
+
+        const updatedProduct = await Products.findOneAndUpdate(
+            { slug },
+            updates,
+            updateOptions
+        );
+
+        if (!updatedProduct) {
+            throw createError(404, "Can't update product");
+        }
+        return updatedProduct;
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
-    getSingleProducts,
+    getSingleProduct,
+    deleteProducts,
+    updateProducts,
 };
